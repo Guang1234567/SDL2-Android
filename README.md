@@ -1,3 +1,54 @@
+# My Changed
+
+- 2020-05-15   build newest  `SDL2-2.0.12.tar.gz`
+
+
+Prebuild-Share-Library is here, see `out` dir :
+
+```ruby
+╰─ tree -L 3 out
+out
+├── SDL2-2.0.12.tar.gz
+├── SDL2_gfx-1.0.4.tar.gz
+├── SDL2_image-2.0.5.tar.gz
+├── SDL2_mixer-2.0.4.tar.gz
+├── SDL2_net-2.0.1.tar.gz
+├── SDL2_ttf-2.0.15.tar.gz
+└── lib
+    ├── sdl2
+    │   ├── arm64-v8a
+    │   ├── armeabi-v7a
+    │   ├── x86
+    │   └── x86_64
+    ├── sdl2_gfx
+    │   ├── arm64-v8a
+    │   ├── armeabi-v7a
+    │   ├── x86
+    │   └── x86_64
+    ├── sdl2_img
+    │   ├── arm64-v8a
+    │   ├── armeabi-v7a
+    │   ├── x86
+    │   └── x86_64
+    ├── sdl2_mixer
+    │   ├── arm64-v8a
+    │   ├── armeabi-v7a
+    │   ├── x86
+    │   └── x86_64
+    ├── sdl2_net
+    │   ├── arm64-v8a
+    │   ├── armeabi-v7a
+    │   ├── x86
+    │   └── x86_64
+    └── sdl2_ttf
+        ├── arm64-v8a
+        ├── armeabi-v7a
+        ├── x86
+        └── x86_64
+```
+
+====
+
 # SDL2-Android
 Bash script to download and build:
 ##### SDL2

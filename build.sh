@@ -17,11 +17,11 @@ txtrst=$(tput sgr0)
 
 # Global Variables #
 DOWNLOADER=""
-NDK_DIR=""
+NDK_DIR=${ANDROID_NDK_HOME}
 NDK_OPTIONS="$NDK_OPTIONS"
 INSTALL_DIR=$(pwd)
-ARCH="armeabi-v7a"
-API="16"
+ARCH="all"
+API="21"
 
 function MESSAGE { printf "$txtgreen$1 $txtrst\n"; }
 
@@ -90,15 +90,17 @@ function build_SDL2
 
     $NDK_DIR/ndk-build -C $INSTALL_DIR/$src_SDL2 NDK_PROJECT_PATH=$NDK_DIR \
         APP_BUILD_SCRIPT=$INSTALL_DIR/$src_SDL2/Android.mk \
-        APP_PLATFORM=android-$API APP_ABI=$ARCH $NDK_OPTIONS
+        APP_PLATFORM=android-$API APP_ABI=$ARCH $NDK_OPTIONS \
+        NDK_OUT=${INSTALL_DIR}/obj/sdl2 \
+        NDK_LIBS_OUT=${INSTALL_DIR}/lib/sdl2
     STATUS "Building SDL2"
 
-    printf "$txtgreen" 
-    cp -avu $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
-    cp -avu $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
-    printf "$txtrst"
+#    printf "$txtgreen" 
+#    cp -avu $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
+#    cp -avu $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
+#    printf "$txtrst"
 
-    rm -rf $NDK_DIR/libs $NDK_DIR/obj    
+#    rm -rf $NDK_DIR/libs $NDK_DIR/obj    
 }
 
 function build_SDL2_image
@@ -109,24 +111,30 @@ function build_SDL2_image
     cp -fva $DIR/Android.mk $DIR/tmp.mk
     rm -f $DIR/Android.mk
 
-    line="LOCAL_CFLAGS += -I$INSTALL_DIR/$src_SDL2/include" 
-    sed "/LOCAL_LDLIBS :=/a $line" $DIR/tmp.mk > $DIR/Android.mk
-    sed -i "18 a LOCAL_MODULE := SDL2" $DIR/Android.mk
-    sed -i "19 a LOCAL_SRC_FILES := $INSTALL_DIR/lib/libSDL2.so" $DIR/Android.mk
+    line="LOCAL_CFLAGS += -I$INSTALL_DIR/$src_SDL2/include\nLOCAL_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" 
+    gsed "/LOCAL_LDLIBS :=/a $line" $DIR/tmp.mk > $DIR/Android.mk
+    
+    gsed -i "18 a include \$(CLEAR_VARS)" $DIR/Android.mk
+    gsed -i "19 a LOCAL_MODULE := SDL2" $DIR/Android.mk
+    gsed -i "20 a LOCAL_MODULE_FILENAME := libSDL2" $DIR/Android.mk
+    gsed -i "21 a LOCAL_SRC_FILES := $INSTALL_DIR/lib/sdl2/\$(TARGET_ARCH_ABI)/libSDL2.so" $DIR/Android.mk
+    gsed -i "22 a LOCAL_EXPORT_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" $DIR/Android.mk
     line="include \$(PREBUILT_SHARED_LIBRARY)"
-    sed -i "20 a $line" $DIR/Android.mk
+    gsed -i "23 a $line" $DIR/Android.mk
 
 	$NDK_DIR/ndk-build -C $DIR NDK_PROJECT_PATH=$NDK_DIR APP_BUILD_SCRIPT=$DIR/Android.mk \
-        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS
+        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS \
+        NDK_OUT=${INSTALL_DIR}/obj/sdl2_img \
+        NDK_LIBS_OUT=${INSTALL_DIR}/lib/sdl2_img
     STATUS "Building SDL2_image"
 
-    printf "$txtgreen" 
-    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
-    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
-    printf "$txtrst"
+#    printf "$txtgreen" 
+#    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
+#    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
+#    printf "$txtrst"
 
-    rm -rf $NDK_DIR/libs $NDK_DIR/obj $DIR/Android.mk
-    mv -f $DIR/tmp.mk $DIR/Android.mk
+#    rm -rf $NDK_DIR/libs $NDK_DIR/obj $DIR/Android.mk
+#    mv -f $DIR/tmp.mk $DIR/Android.mk
 }
 
 function build_SDL2_mixer
@@ -136,23 +144,26 @@ function build_SDL2_mixer
     DIR=$INSTALL_DIR/$src_SDL2_mixer
     cp -fva $DIR/Android.mk $DIR/tmp.mk
 
-    sed -i "26 a LOCAL_MODULE := SDL2" $DIR/Android.mk
-    sed -i "27 a LOCAL_SRC_FILES := $INSTALL_DIR/lib/libSDL2.so" $DIR/Android.mk
-    sed -i "28 a LOCAL_EXPORT_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" $DIR/Android.mk
+		gsed -i "26 a include \$(CLEAR_VARS)" $DIR/Android.mk
+    gsed -i "27 a LOCAL_MODULE := SDL2" $DIR/Android.mk
+    gsed -i "28 a LOCAL_SRC_FILES := $INSTALL_DIR/lib/sdl2/\$(TARGET_ARCH_ABI)/libSDL2.so" $DIR/Android.mk
+    gsed -i "29 a LOCAL_EXPORT_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" $DIR/Android.mk
     line="include \$(PREBUILT_SHARED_LIBRARY)"
-    sed -i "29 a $line" $DIR/Android.mk
+    gsed -i "30 a $line" $DIR/Android.mk
 
 	$NDK_DIR/ndk-build -C $DIR NDK_PROJECT_PATH=$NDK_DIR APP_BUILD_SCRIPT=$DIR/Android.mk \
-        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS
+        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS \
+        NDK_OUT=${INSTALL_DIR}/obj/sdl2_mixer \
+        NDK_LIBS_OUT=${INSTALL_DIR}/lib/sdl2_mixer
     STATUS "Building SDL2_mixer"
 
-    printf "$txtgreen" 
-    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
-    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
-    printf "$txtrst"
+#    printf "$txtgreen" 
+#    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
+#    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
+#    printf "$txtrst"
 
-    rm -rf $NDK_DIR/libs $NDK_DIR/obj $DIR/Android.mk
-    mv -f $DIR/tmp.mk $DIR/Android.mk
+#    rm -rf $NDK_DIR/libs $NDK_DIR/obj $DIR/Android.mk
+#    mv -f $DIR/tmp.mk $DIR/Android.mk
 }
 
 function build_SDL2_net
@@ -163,22 +174,25 @@ function build_SDL2_net
     cp -fva $DIR/Android.mk $DIR/tmp.mk
 
     line="include \$(PREBUILT_SHARED_LIBRARY)"
-    sed -i "1 a LOCAL_MODULE := SDL2" $DIR/Android.mk
-    sed -i "2 a LOCAL_SRC_FILES := $INSTALL_DIR/lib/libSDL2.so" $DIR/Android.mk
-    sed -i "3 a LOCAL_EXPORT_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" $DIR/Android.mk
-    sed -i "4 a $line" $DIR/Android.mk
+    gsed -i "1 a include \$(CLEAR_VARS)" $DIR/Android.mk
+    gsed -i "2 a LOCAL_MODULE := SDL2" $DIR/Android.mk
+    gsed -i "3 a LOCAL_SRC_FILES := $INSTALL_DIR/lib/sdl2/\$(TARGET_ARCH_ABI)/libSDL2.so" $DIR/Android.mk
+    gsed -i "4 a LOCAL_EXPORT_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" $DIR/Android.mk
+    gsed -i "5 a $line" $DIR/Android.mk
 
 	$NDK_DIR/ndk-build -C $DIR NDK_PROJECT_PATH=$NDK_DIR APP_BUILD_SCRIPT=$DIR/Android.mk \
-        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS
+        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS \
+        NDK_OUT=${INSTALL_DIR}/obj/sdl2_net \
+        NDK_LIBS_OUT=${INSTALL_DIR}/lib/sdl2_net
     STATUS "Building SDL2_net"
 
-    printf "$txtgreen" 
-    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
-    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
-    printf "$txtrst"
+#    printf "$txtgreen" 
+#    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
+#    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
+#    printf "$txtrst"
 
-    rm -rf $NDK_DIR/libs $NDK_DIR/obj $DIR/Android.mk
-    mv -f $DIR/tmp.mk $DIR/Android.mk	
+#    rm -rf $NDK_DIR/libs $NDK_DIR/obj $DIR/Android.mk
+#    mv -f $DIR/tmp.mk $DIR/Android.mk	
 }
 
 function build_SDL2_ttf
@@ -189,22 +203,25 @@ function build_SDL2_ttf
     cp -fva $DIR/Android.mk $DIR/tmp.mk
 
     line="include \$(PREBUILT_SHARED_LIBRARY)"
-    sed -i "3 a LOCAL_MODULE := SDL2" $DIR/Android.mk
-    sed -i "4 a LOCAL_SRC_FILES := $INSTALL_DIR/lib/libSDL2.so" $DIR/Android.mk
-    sed -i "5 a LOCAL_EXPORT_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" $DIR/Android.mk
-    sed -i "6 a $line" $DIR/Android.mk
+    gsed -i "3 a include \$(CLEAR_VARS)" $DIR/Android.mk
+    gsed -i "4 a LOCAL_MODULE := SDL2" $DIR/Android.mk
+    gsed -i "5 a LOCAL_SRC_FILES := $INSTALL_DIR/lib/sdl2/\$(TARGET_ARCH_ABI)/libSDL2.so" $DIR/Android.mk
+    gsed -i "6 a LOCAL_EXPORT_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" $DIR/Android.mk
+    gsed -i "7 a $line" $DIR/Android.mk
 
 	$NDK_DIR/ndk-build -C $DIR NDK_PROJECT_PATH=$NDK_DIR APP_BUILD_SCRIPT=$DIR/Android.mk \
-        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS
+        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS \
+        NDK_OUT=${INSTALL_DIR}/obj/sdl2_ttf \
+        NDK_LIBS_OUT=${INSTALL_DIR}/lib/sdl2_ttf
     STATUS "Building SDL2_ttf"
 
-    printf "$txtgreen" 
-    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
-    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
-    printf "$txtrst"
+#    printf "$txtgreen" 
+#    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
+#    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
+#    printf "$txtrst"
 
-    rm -rf $NDK_DIR/libs $NDK_DIR/obj $DIR/Android.mk
-    mv -f $DIR/tmp.mk $DIR/Android.mk	
+#   rm -rf $NDK_DIR/libs $NDK_DIR/obj $DIR/Android.mk
+#    mv -f $DIR/tmp.mk $DIR/Android.mk	
 }
 
 function build_SDL2_gfx
@@ -220,8 +237,9 @@ function build_SDL2_gfx
     done
 
     echo "LOCAL_PATH := \$(call my-dir)" > $DIR/Android.mk
+    echo "include \$(CLEAR_VARS)" > $DIR/Android.mk
     echo "LOCAL_MODULE := SDL2" >> $DIR/Android.mk
-    echo "LOCAL_SRC_FILES := $INSTALL_DIR/lib/libSDL2.so" >> $DIR/Android.mk
+    echo "LOCAL_SRC_FILES := $INSTALL_DIR/lib/sdl2/\$(TARGET_ARCH_ABI)/libSDL2.so" >> $DIR/Android.mk
     echo "LOCAL_EXPORT_C_INCLUDES += $INSTALL_DIR/$src_SDL2/include" >> $DIR/Android.mk
     echo "include \$(PREBUILT_SHARED_LIBRARY)" >> $DIR/Android.mk
     echo "include \$(CLEAR_VARS)" >> $DIR/Android.mk
@@ -234,15 +252,17 @@ function build_SDL2_gfx
     echo "include \$(BUILD_SHARED_LIBRARY)" >> $DIR/Android.mk
  
 	$NDK_DIR/ndk-build -C $DIR NDK_PROJECT_PATH=$NDK_DIR APP_BUILD_SCRIPT=$DIR/Android.mk \
-        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS
+        APP_PLATFORM=android-$API APP_ABI=$ARCH APP_ALLOW_MISSING_DEPS=true $NDK_OPTIONS \
+        NDK_OUT=${INSTALL_DIR}/obj/sdl2_gfx \
+        NDK_LIBS_OUT=${INSTALL_DIR}/lib/sdl2_gfx
     STATUS "Building SDL2_gfx"
 
-    printf "$txtgreen" 
-    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
-    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
-    printf "$txtrst"
+#    printf "$txtgreen" 
+#    cp -avn $NDK_DIR/libs/$ARCH/*.so $INSTALL_DIR/lib
+#    cp -avn $NDK_DIR/obj/local/$ARCH/lib*.* $INSTALL_DIR/liball
+#    printf "$txtrst"
 
-    rm -rf $NDK_DIR/libs $NDK_DIR/obj
+#    rm -rf $NDK_DIR/libs $NDK_DIR/obj
 }
 
 function parseArgs
